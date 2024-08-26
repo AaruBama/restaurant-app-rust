@@ -31,9 +31,9 @@ pub async fn add_item_handler(
 
 pub async fn remove_item_handler(
     restaurant_service: web::Data<Arc<Mutex<RestaurantService>>>,
-    path: web::Path<(u32, String)>
+    params: web::Path<(u32, String)>
 ) -> impl Responder {
-    let (table_number, item_id) = path.into_inner();
+    let (table_number, item_id) = params.into_inner();
     let mut restaurant = restaurant_service.lock().unwrap();
     let success = restaurant.remove_item(table_number, &item_id);
     if success {
