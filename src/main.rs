@@ -17,6 +17,7 @@ async fn main() -> std::io::Result<()> {
             .route("/tables/{table_number}/items", web::post().to(api::add_item_handler))
             .route("/tables/{table_number}/items/{item_id}", web::delete().to(api::remove_item_handler))
             .route("/tables/{table_number}/items", web::get().to(api::query_items_handler))
+            .route("/tables/{table_number}/items/{item_id}", web::get().to(api::query_specific_items_handler))
             .route("/menu", web::get().to(api::get_menu_handler))
     })
         .bind("127.0.0.1:8080")?

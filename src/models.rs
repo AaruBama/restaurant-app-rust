@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -13,6 +14,7 @@ pub struct OrderItem {
     pub order_item_id: String,
     pub menu_item: MenuItem,
     pub quantity: u32,
+    pub created_at: DateTime<Utc>
 }
 
 #[derive(Debug)]
@@ -32,6 +34,11 @@ impl Table {
 
 #[derive(Serialize, Deserialize)]
 pub struct AddItemRequest {
+    pub items: Vec<OrderItemRequest>, // Change to a vector of OrderItemRequest
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct OrderItemRequest {
     pub item_name: String,
     pub quantity: u32,
 }

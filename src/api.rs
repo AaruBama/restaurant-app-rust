@@ -11,20 +11,25 @@ pub async fn add_item_handler(
     item_info: web::Json<AddItemRequest>, // Change to use the new struct
 ) -> impl Responder {
     let mut restaurant = restaurant_service.lock().unwrap();
-    match restaurant.add_item(*table_number, item_info.item_name.clone(), item_info.quantity) {
-        Ok(order_item) => HttpResponse::Created().json(order_item),
-        Err(error_message) => HttpResponse::BadRequest().json(serde_json::json!({"error": error_message})),
+    let mut order_items = Vec::new();
+    for item in &item_info.items {
+        match restaurant.add_item(*table_number, item.item_name.clone(), item.quantity) {
+            Ok(order_item) => order_items.push(order_item),
+            Err(error_message) => {
+                return HttpResponse::BadRequest().json(serde_json::json!({"error": error_message}));
+            }
+        }
     }
-    // HttpResponse::Created().json(order_item)
+    HttpResponse::Created().json(order_items)
 }
 
 pub async fn remove_item_handler(
     restaurant_service: web::Data<Arc<Mutex<RestaurantService>>>,
-    table_number: web::Path<u32>,
-    item_id: web::Path<String>,
+    path: web::Path<(u32, String)>
 ) -> impl Responder {
+    let (table_number, item_id) = path.into_inner();
     let mut restaurant = restaurant_service.lock().unwrap();
-    let success = restaurant.remove_item(*table_number, &item_id);
+    let success = restaurant.remove_item(table_number, &item_id);
     if success {
         HttpResponse::Ok().json(json!({"success": true, "message": "Item removed successfully."}))
     } else {
@@ -39,6 +44,24 @@ pub async fn query_items_handler(
     let restaurant = restaurant_service.lock().unwrap();
     let items = restaurant.query_items(*table_number);
     HttpResponse::Ok().json(items)
+}
+
+pub async fn query_specific_items_handler(
+    restaurant_service: web::Data<Arc<Mutex<RestaurantService>>>,
+    path: web::Path<(u32, String)>
+) -> impl Responder {
+    let restaurant = restaurant_service.lock().unwrap();
+    let (table_number, item_id) = path.into_inner();
+    if let Some(table) = restaurant.tables.get(&table_number) {
+        // Check if the item exists in the table's order_items
+        if let Some(order_item) = table.order_items.get(item_id.as_str()) {
+            // Item found, return it
+            return HttpResponse::Ok().json(order_item);
+        }
+    }
+
+    // Item not found, return an error response
+    HttpResponse::NotFound().json(serde_json::json!({"error": "Item not found"}))
 }
 
 pub async fn get_menu_handler(

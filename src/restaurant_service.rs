@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use chrono::Utc;
 use uuid::Uuid;
 use crate::models::{MenuItem, OrderItem, Table};
 
@@ -56,6 +57,7 @@ impl RestaurantService {
                     order_item_id: item_id.clone(),
                     menu_item: menu_item.clone(),
                     quantity,
+                    created_at: Utc::now(),
                 };
 
                 table.order_items.insert(item_id, order_item.clone());
