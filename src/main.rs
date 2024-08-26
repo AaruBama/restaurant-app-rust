@@ -8,6 +8,7 @@ mod models;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    const MAX_TABLES: usize = 100;
     let restaurant_service = Arc::new(Mutex::new(RestaurantService::new()));
 
     HttpServer::new(move || {

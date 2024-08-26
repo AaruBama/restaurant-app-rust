@@ -10,6 +10,12 @@ pub async fn add_item_handler(
     table_number: web::Path<u32>,
     item_info: web::Json<AddItemRequest>, // Change to use the new struct
 ) -> impl Responder {
+    const MAX_TABLES: usize = 100;
+    if *table_number > MAX_TABLES as u32 {
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": format!("Max tables allowed is {}", MAX_TABLES)
+        }));
+    }
     let mut restaurant = restaurant_service.lock().unwrap();
     let mut order_items = Vec::new();
     for item in &item_info.items {
@@ -48,10 +54,10 @@ pub async fn query_items_handler(
 
 pub async fn query_specific_items_handler(
     restaurant_service: web::Data<Arc<Mutex<RestaurantService>>>,
-    path: web::Path<(u32, String)>
+    params: web::Path<(u32, String)>
 ) -> impl Responder {
     let restaurant = restaurant_service.lock().unwrap();
-    let (table_number, item_id) = path.into_inner();
+    let (table_number, item_id) = params.into_inner();
     if let Some(table) = restaurant.tables.get(&table_number) {
         // Check if the item exists in the table's order_items
         if let Some(order_item) = table.order_items.get(item_id.as_str()) {
